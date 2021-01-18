@@ -16,10 +16,24 @@ class ShortcutManager {
     init(windowManager: WindowManager) {
         self.windowManager = windowManager
         
+        MASShortcutBinder.shared()?.bindingOptions = [NSBindingOption.valueTransformerName: MASDictionaryTransformerName]
+        
         registerDefaults()
 
         bindShortcuts()
         
+        subscribeAll(selector: #selector(windowActionTriggered))
+        
+        NotificationCenter.default.addObserver(forName: SettingsViewController.changeDefaultsNotificationName, object: nil, queue: nil) { notification in
+            self.registerDefaults()
+        }
+    }
+    
+    public func reloadFromDefaults() {
+        unsubscribe()
+        unbindShortcuts()
+        registerDefaults()
+        bindShortcuts()
         subscribeAll(selector: #selector(windowActionTriggered))
     }
     

@@ -8,22 +8,13 @@
 
 import Foundation
 
-class FirstThirdCalculation: WindowCalculation {
+class FirstThirdCalculation: WindowCalculation, OrientationAware {
     
-    private var centerThirdCalculation: CenterThirdCalculation?
-    private var lastThirdCalculation: LastThirdCalculation?
-    
-    init(repeatable: Bool = true) {
-        if repeatable && Defaults.subsequentExecutionMode.value != .none {
-            centerThirdCalculation = CenterThirdCalculation()
-            lastThirdCalculation = LastThirdCalculation(repeatable: false)
-        }
-    }
-    
-    override func calculateRect(_ window: Window, lastAction: RectangleAction?, visibleFrameOfScreen: CGRect, action: WindowAction) -> RectResult {
+    override func calculateRect(_ params: RectCalculationParameters) -> RectResult {
+        let visibleFrameOfScreen = params.visibleFrameOfScreen
         guard Defaults.subsequentExecutionMode.value != .none,
-            let last = lastAction, let lastSubAction = last.subAction else {
-                return firstThirdRect(window, lastAction: lastAction, visibleFrameOfScreen: visibleFrameOfScreen, action: action)
+            let last = params.lastAction, let lastSubAction = last.subAction else {
+            return orientationBasedRect(visibleFrameOfScreen)
         }
         
         var calculation: WindowCalculation?
@@ -31,45 +22,39 @@ class FirstThirdCalculation: WindowCalculation {
         if last.action == .firstThird {
             switch lastSubAction {
             case .topThird, .leftThird:
-                calculation = centerThirdCalculation
+                calculation = WindowCalculationFactory.centerThirdCalculation
             case .centerHorizontalThird, .centerVerticalThird:
-                calculation = lastThirdCalculation
+                calculation = WindowCalculationFactory.lastThirdCalculation
             default:
                 break
             }
         } else if last.action == .lastThird {
             switch lastSubAction {
             case .topThird, .leftThird:
-                calculation = centerThirdCalculation
+                calculation = WindowCalculationFactory.centerThirdCalculation
             default:
                 break
             }
         }
         
         if let calculation = calculation {
-            return calculation.calculateRect(window, lastAction: lastAction, visibleFrameOfScreen: visibleFrameOfScreen, action: action)
+            return calculation.calculateRect(params)
         }
         
-        return firstThirdRect(window, lastAction: lastAction, visibleFrameOfScreen: visibleFrameOfScreen, action: action)
+        return orientationBasedRect(visibleFrameOfScreen)
     }
     
-    func firstThirdRect(_ window: Window, lastAction: RectangleAction?, visibleFrameOfScreen: CGRect, action: WindowAction) -> RectResult {
-        return isLandscape(visibleFrameOfScreen)
-            ? RectResult(leftThird(visibleFrameOfScreen), subAction: .leftThird)
-            : RectResult(topThird(visibleFrameOfScreen), subAction: .topThird)
+    func landscapeRect(_ visibleFrameOfScreen: CGRect) -> RectResult {
+        var rect = visibleFrameOfScreen
+        rect.size.width = floor(visibleFrameOfScreen.width / 3.0)
+        return RectResult(rect, subAction: .leftThird)
     }
     
-    private func leftThird(_ visibleFrameOfScreen: CGRect) -> CGRect {
-        var oneThirdRect = visibleFrameOfScreen
-        oneThirdRect.size.width = floor(visibleFrameOfScreen.width / 3.0)
-        return oneThirdRect
+    func portraitRect(_ visibleFrameOfScreen: CGRect) -> RectResult {
+        var rect = visibleFrameOfScreen
+        rect.size.height = floor(visibleFrameOfScreen.height / 3.0)
+        rect.origin.y = visibleFrameOfScreen.minY + visibleFrameOfScreen.height - rect.height
+        return RectResult(rect, subAction: .topThird)
     }
-    
-    private func topThird(_ visibleFrameOfScreen: CGRect) -> CGRect {
-        var oneThirdRect = visibleFrameOfScreen
-        oneThirdRect.size.height = floor(visibleFrameOfScreen.height / 3.0)
-        oneThirdRect.origin.y = visibleFrameOfScreen.origin.y + visibleFrameOfScreen.height - oneThirdRect.height
-        return oneThirdRect
-    }
-    
+
 }

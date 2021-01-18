@@ -1,14 +1,13 @@
 ---
-name: Feature request
-about: Suggest an idea for this project
+name: Feature idea
+about: Please use the Discussions tab to share a feature idea ⬆️
 title: ''
 labels: 'enhancement'
 assignees: ''
-
+contact_links:
+  - name: Rectangle Discussions
+    url: https://github.com/rxhanson/Rectangle/discussions
+    about: Please discuss feature ideas here.
 ---
 
-Rectangle is not accepting any new feature requests at this time, sorry. 
-
-Feature requests can still be created and discussed, but they will be closed unless they reveal a bug. Keeping Rectangle simple is the most important feature :)
-
-If you implement a feature in a fork that you would like to get rolled into Rectangle, pull requests are still welcome but are not guaranteed to be accepted.
+Feature ideas are now kept in the [discussions tab](https://github.com/rxhanson/Rectangle/discussions). Please create an issue there, not here.

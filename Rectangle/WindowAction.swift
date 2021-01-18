@@ -9,6 +9,7 @@
 import Foundation
 import Carbon
 import Cocoa
+import MASShortcut
 
 fileprivate let alt = NSEvent.ModifierFlags.option.rawValue
 fileprivate let ctrl = NSEvent.ModifierFlags.control.rawValue
@@ -41,28 +42,42 @@ enum WindowAction: Int {
     moveRight = 26,
     moveUp = 27,
     moveDown = 28,
-    almostMaximize = 29
+    almostMaximize = 29,
+    centerHalf = 30,
+    firstFourth = 31,
+    secondFourth = 32,
+    thirdFourth = 33,
+    lastFourth = 34,
+    topLeftSixth = 35,
+    topCenterSixth = 36,
+    topRightSixth = 37,
+    bottomLeftSixth = 38,
+    bottomCenterSixth = 39,
+    bottomRightSixth = 40
     
     // Order matters here - it's used in the menu
-    static let active = [leftHalf, rightHalf, topHalf, bottomHalf,
+    static let active = [leftHalf, rightHalf, centerHalf, topHalf, bottomHalf,
                          topLeft, topRight, bottomLeft, bottomRight,
                          firstThird, firstTwoThirds, centerThird, lastTwoThirds, lastThird,
                          maximize, almostMaximize, maximizeHeight, smaller, larger, center, restore,
                          nextDisplay, previousDisplay,
-                         moveLeft, moveRight, moveUp, moveDown]
+                         moveLeft, moveRight, moveUp, moveDown,
+                         firstFourth, secondFourth, thirdFourth, lastFourth,
+                         topLeftSixth, topCenterSixth, topRightSixth, bottomLeftSixth, bottomCenterSixth, bottomRightSixth
+    ]
     
     func post() {
         NotificationCenter.default.post(name: notificationName, object: ExecutionParameters(self))
     }
     
-    func postSnap(screen: NSScreen) {
-        NotificationCenter.default.post(name: notificationName, object: ExecutionParameters(self, updateRestoreRect: false, screen: screen))
+    func postSnap(windowElement: AccessibilityElement?, windowId: Int?, screen: NSScreen) {
+        NotificationCenter.default.post(name: notificationName, object: ExecutionParameters(self, updateRestoreRect: false, screen: screen, windowElement: windowElement, windowId: windowId))
     }
     
     // Determines where separators should be used in the menu
     var firstInGroup: Bool {
         switch self {
-        case .leftHalf, .topLeft, .firstThird, .maximize, .nextDisplay, .moveLeft:
+        case .leftHalf, .topLeft, .firstThird, .maximize, .nextDisplay, .moveLeft, .firstFourth, .topLeftSixth:
             return true
         default:
             return false
@@ -97,6 +112,17 @@ enum WindowAction: Int {
         case .moveUp: return "moveUp"
         case .moveDown: return "moveDown"
         case .almostMaximize: return "almostMaximize"
+        case .centerHalf: return "centerHalf"
+        case .firstFourth: return "firstFourth"
+        case .secondFourth: return "secondFourth"
+        case .thirdFourth: return "thirdFourth"
+        case .lastFourth: return "lastFourth"
+        case .topLeftSixth: return "topLeftSixth"
+        case .topCenterSixth: return "topCenterSixth"
+        case .topRightSixth: return "topRightSixth"
+        case .bottomLeftSixth: return "bottomLeftSixth"
+        case .bottomCenterSixth: return "bottomCenterSixth"
+        case .bottomRightSixth: return "bottomRightSixth"
         }
     }
 
@@ -183,6 +209,39 @@ enum WindowAction: Int {
         case .almostMaximize:
             key = "e57-QJ-6bL.title"
             value = "Almost Maximize"
+        case .centerHalf:
+            key = "bRX-dV-iAR.title"
+            value = "Center Half"
+        case .firstFourth:
+            key = "Q6Q-6J-okH.title"
+            value = "First Fourth"
+        case .secondFourth:
+            key = "Fko-xs-gN5.title"
+            value = "Second Fourth"
+        case .thirdFourth:
+            key = "ZTK-rS-b17.title"
+            value = "Third Fourth"
+        case .lastFourth:
+            key = "6HX-rn-VIp.title"
+            value = "Last Fourth"
+        case .topLeftSixth:
+            key = "mFt-Kg-UYG.title"
+            value = "Top Left Sixth"
+        case .topCenterSixth:
+            key = "TTx-7X-Wie.title"
+            value = "Top Center Sixth"
+        case .topRightSixth:
+            key = "f3Q-q7-Pcy.title"
+            value = "Top Right Sixth"
+        case .bottomLeftSixth:
+            key = "LqQ-pM-jRN.title"
+            value = "Bottom Left Sixth"
+        case .bottomCenterSixth:
+            key = "iOQ-1e-esP.title"
+            value = "Bottom Center Sixth"
+        case .bottomRightSixth:
+            key = "m2F-eA-g7w.title"
+            value = "Bottom Right Sixth"
         }
         
         return NSLocalizedString(key, tableName: "Main", value: value, comment: "")
@@ -201,7 +260,8 @@ enum WindowAction: Int {
     
     var resizes: Bool {
         switch self {
-        case .moveUp, .moveDown, .moveLeft, .moveRight, .center, .nextDisplay, .previousDisplay: return false
+        case .center, .nextDisplay, .previousDisplay: return false
+        case .moveUp, .moveDown, .moveLeft, .moveRight: return Defaults.resizeOnDirectionalMove.enabled
         default: return true
         }
     }
@@ -283,6 +343,17 @@ enum WindowAction: Int {
         case .moveUp: return NSImage(imageLiteralResourceName: "moveUpTemplate")
         case .moveDown: return NSImage(imageLiteralResourceName: "moveDownTemplate")
         case .almostMaximize: return NSImage(imageLiteralResourceName: "almostMaximizeTemplate")
+        case .centerHalf: return NSImage(imageLiteralResourceName: "halfWidthCenterTemplate")
+        case .firstFourth: return NSImage(imageLiteralResourceName: "leftFourthTemplate")
+        case .secondFourth: return NSImage(imageLiteralResourceName: "centerLeftFourthTemplate")
+        case .thirdFourth: return NSImage(imageLiteralResourceName: "centerRightFourthTemplate")
+        case .lastFourth: return NSImage(imageLiteralResourceName: "rightFourthTemplate")
+        case .topLeftSixth: return NSImage(imageLiteralResourceName: "topLeftSixthTemplate")
+        case .topCenterSixth: return NSImage(imageLiteralResourceName: "topCenterSixthTemplate")
+        case .topRightSixth: return NSImage(imageLiteralResourceName: "topRightSixthTemplate")
+        case .bottomLeftSixth: return NSImage(imageLiteralResourceName: "bottomLeftSixthTemplate")
+        case .bottomCenterSixth: return NSImage(imageLiteralResourceName: "bottomCenterSixthTemplate")
+        case .bottomRightSixth: return NSImage(imageLiteralResourceName: "bottomRightSixthTemplate")
         }
     }
     
@@ -296,17 +367,37 @@ enum WindowAction: Int {
         case .bottomRight: return [.top, .left]
         case .topLeft: return [.bottom, .right]
         case .topRight: return [.bottom, .left]
+        case .moveUp: return Defaults.resizeOnDirectionalMove.enabled ? .bottom : .none
+        case .moveDown: return Defaults.resizeOnDirectionalMove.enabled ? .top : .none
+        case .moveLeft: return Defaults.resizeOnDirectionalMove.enabled ? .right : .none
+        case .moveRight: return Defaults.resizeOnDirectionalMove.enabled ? .left : .none
         default:
             return .none
         }
     }
     
-    var gapsApplicable: Bool {
+    var gapsApplicable: Dimension {
         switch self {
-        case .leftHalf, .rightHalf, .bottomHalf, .topHalf, .maximize, .bottomLeft, .bottomRight, .topLeft, .topRight, .firstThird, .firstTwoThirds, .centerThird, .lastTwoThirds, .lastThird:
-            return true
-        default:
-            return false
+        case .leftHalf, .rightHalf, .bottomHalf, .topHalf, .centerHalf, .maximize, .bottomLeft, .bottomRight, .topLeft, .topRight, .firstThird, .firstTwoThirds, .centerThird, .lastTwoThirds, .lastThird,
+             .firstFourth, .secondFourth, .thirdFourth, .lastFourth, .topLeftSixth, .topCenterSixth, .topRightSixth, .bottomLeftSixth, .bottomCenterSixth, .bottomRightSixth:
+            return .both
+        case .moveUp, .moveDown:
+            return Defaults.resizeOnDirectionalMove.enabled ? .vertical : .none;
+        case .moveLeft, .moveRight:
+            return Defaults.resizeOnDirectionalMove.enabled ? .horizontal : .none;
+        case .maximizeHeight:
+            return .vertical
+        case .almostMaximize, .previousDisplay, .nextDisplay, .larger, .smaller, .center, .restore:
+            return .none
+        }
+    }
+    
+    var category: WindowActionCategory? { // used to specify a submenu
+        switch self {
+        case .firstFourth, .secondFourth, .thirdFourth, .lastFourth: return .fourths
+        case .topLeftSixth, .topCenterSixth, .topRightSixth, .bottomLeftSixth, .bottomCenterSixth, .bottomRightSixth: return .sixths
+        case .moveUp, .moveDown, .moveLeft, .moveRight: return .move
+        default: return nil
         }
     }
 }
@@ -322,8 +413,50 @@ enum SubWindowAction {
     centerHorizontalThird,
     bottomThird,
     topTwoThirds,
-    bottomTwoThirds
+    bottomTwoThirds,
     
+    leftFourth,
+    centerLeftFourth,
+    centerRightFourth,
+    rightFourth,
+    
+    topFourth,
+    centerTopFourth,
+    centerBottomFourth,
+    bottomFourth,
+    
+    rightThreeFourths,
+    bottomThreeFourths,
+    leftThreeFourths,
+    topThreeFourths,
+    
+    centerVerticalHalf,
+    centerHorizontalHalf,
+    
+    topLeftSixthLandscape,
+    topCenterSixthLandscape,
+    topRightSixthLandscape,
+    bottomLeftSixthLandscape,
+    bottomCenterSixthLandscape,
+    bottomRightSixthLandscape,
+    
+    topLeftSixthPortrait,
+    topRightSixthPortrait,
+    leftCenterSixthPortrait,
+    rightCenterSixthPortrait,
+    bottomLeftSixthPortrait,
+    bottomRightSixthPortrait,
+    
+    topLeftTwoSixthsLandscape,
+    topLeftTwoSixthsPortrait,
+    topRightTwoSixthsLandscape,
+    topRightTwoSixthsPortrait,
+    
+    bottomLeftTwoSixthsLandscape,
+    bottomLeftTwoSixthsPortrait,
+    bottomRightTwoSixthsLandscape,
+    bottomRightTwoSixthsPortrait
+
     var gapSharedEdge: Edge {
         switch self {
         case .leftThird: return .right
@@ -336,11 +469,45 @@ enum SubWindowAction {
         case .bottomThird: return .top
         case .topTwoThirds: return .bottom
         case .bottomTwoThirds: return .top
+        case .leftFourth: return .right
+        case .centerLeftFourth: return [.right, .left]
+        case .centerRightFourth: return [.right, .left]
+        case .rightFourth: return .left
+        case .topFourth: return .bottom
+        case .centerTopFourth: return [.top, .bottom]
+        case .centerBottomFourth: return [.top, .bottom]
+        case .bottomFourth: return .top
+        case .rightThreeFourths: return .left
+        case .bottomThreeFourths: return .top
+        case .leftThreeFourths: return .right
+        case .topThreeFourths: return .bottom
+        case .centerVerticalHalf: return [.right, .left]
+        case .centerHorizontalHalf: return [.top, .bottom]
+        case .topLeftSixthLandscape: return [.right, .bottom]
+        case .topCenterSixthLandscape: return [.right, .left, .bottom]
+        case .topRightSixthLandscape: return [.left, .bottom]
+        case .bottomLeftSixthLandscape: return [.top, .right]
+        case .bottomCenterSixthLandscape: return [.left, .right, .top]
+        case .bottomRightSixthLandscape: return [.left, .top]
+        case .topLeftSixthPortrait: return [.right, .bottom]
+        case .topRightSixthPortrait: return [.left, .bottom]
+        case .leftCenterSixthPortrait: return [.top, .bottom, .right]
+        case .rightCenterSixthPortrait: return [.left, .top, .bottom]
+        case .bottomLeftSixthPortrait: return [.top, .right]
+        case .bottomRightSixthPortrait: return [.left, .top]
+        case .topLeftTwoSixthsLandscape: return [.right, .bottom]
+        case .topLeftTwoSixthsPortrait: return [.right, .bottom]
+        case .topRightTwoSixthsLandscape: return [.left, .bottom]
+        case .topRightTwoSixthsPortrait: return [.left, .bottom]
+        case .bottomLeftTwoSixthsLandscape: return [.right, .top]
+        case .bottomLeftTwoSixthsPortrait: return [.right, .top]
+        case .bottomRightTwoSixthsLandscape: return [.left, .top]
+        case .bottomRightTwoSixthsPortrait: return [.left, .top]
         }
     }
 }
 
-struct Shortcut {
+struct Shortcut: Codable {
     let keyCode: Int
     let modifierFlags: UInt
     
@@ -349,7 +516,17 @@ struct Shortcut {
         self.modifierFlags = modifierFlags
     }
     
-    var dict: [String: UInt] {
-        return ["keyCode": UInt(keyCode), "modifierFlags": modifierFlags]
+    init(masShortcut: MASShortcut) {
+        self.keyCode = masShortcut.keyCode
+        self.modifierFlags = masShortcut.modifierFlags.rawValue
+    }
+    
+    func toMASSHortcut() -> MASShortcut {
+        MASShortcut(keyCode: keyCode, modifierFlags: NSEvent.ModifierFlags(rawValue: modifierFlags))
+    }
+    
+    func displayString() -> String {
+        let masShortcut = toMASSHortcut()
+        return masShortcut.modifierFlagsString + masShortcut.keyCodeString
     }
 }

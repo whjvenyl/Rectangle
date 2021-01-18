@@ -10,21 +10,21 @@ import Cocoa
 
 class SnappingManager {
 
-    let windowCalculationFactory: WindowCalculationFactory
     let windowHistory: WindowHistory
     
     var eventMonitor: EventMonitor?
     var windowElement: AccessibilityElement?
     var windowId: Int?
+    var windowIdAttempt: Int = 0
+    var lastWindowIdAttempt: TimeInterval?
     var windowMoving: Bool = false
     var initialWindowRect: CGRect?
     var currentSnapArea: SnapArea?
     
-    var box: NSWindow?
+    var box: FootprintWindow?
     
     let screenDetection = ScreenDetection()
     
-    private let gapSize = Defaults.gapSize.value
     private let marginTop = Defaults.snapEdgeMarginTop.value
     private let marginBottom = Defaults.snapEdgeMarginBottom.value
     private let marginLeft = Defaults.snapEdgeMarginLeft.value
@@ -45,8 +45,7 @@ class SnappingManager {
         .bottomRightShort: .bottomHalf
     ]
     
-    init(windowCalculationFactory: WindowCalculationFactory, windowHistory: WindowHistory) {
-        self.windowCalculationFactory = windowCalculationFactory
+    init(windowHistory: WindowHistory) {
         self.windowHistory = windowHistory
         
         if Defaults.windowSnapping.enabled != false {
@@ -60,6 +59,18 @@ class SnappingManager {
         NotificationCenter.default.addObserver(self, selector: #selector(windowSnappingToggled), name: SettingsViewController.windowSnappingNotificationName, object: nil)
     }
     
+    public func reloadFromDefaults() {
+        if Defaults.windowSnapping.userDisabled {
+            if eventMonitor?.running == true {
+                disableSnapping()
+            }
+        } else {
+            if eventMonitor?.running != true {
+                enableSnapping()
+            }
+        }
+    }
+        
     @objc func windowSnappingToggled(notification: Notification) {
         guard let enabled = notification.object as? Bool else { return }
         if enabled {
@@ -70,7 +81,7 @@ class SnappingManager {
     }
     
     private func enableSnapping() {
-        box = generateBoxWindow()
+        box = FootprintWindow()
         eventMonitor = EventMonitor(mask: [.leftMouseDown, .leftMouseUp, .leftMouseDragged], handler: handle)
         eventMonitor?.start()
     }
@@ -92,20 +103,29 @@ class SnappingManager {
                 initialWindowRect = windowElement?.rectOfElement()
             }
         case .leftMouseUp:
+            if let currentSnapArea = self.currentSnapArea {
+                box?.close()
+                currentSnapArea.action.postSnap(windowElement: windowElement, windowId: windowId, screen: currentSnapArea.screen)
+                self.currentSnapArea = nil
+            }
             windowElement = nil
             windowId = nil
             windowMoving = false
             initialWindowRect = nil
-            if let currentSnapArea = self.currentSnapArea {
-                box?.close()
-                currentSnapArea.action.postSnap(screen: currentSnapArea.screen)
-                self.currentSnapArea = nil
-            }
+            windowIdAttempt = 0
+            lastWindowIdAttempt = nil
         case .leftMouseDragged:
-            if windowId == nil {
+            if windowId == nil, windowIdAttempt < 20 {
+                if let lastWindowIdAttempt = lastWindowIdAttempt {
+                    if event.timestamp - lastWindowIdAttempt < 0.2 {
+                        return
+                    }
+                }
                 windowElement = AccessibilityElement.windowUnderCursor()
                 windowId = windowElement?.getIdentifier()
                 initialWindowRect = windowElement?.rectOfElement()
+                windowIdAttempt += 1
+                lastWindowIdAttempt = event.timestamp
             }
             guard let currentRect = windowElement?.rectOfElement(),
                 let windowId = windowId
@@ -143,7 +163,7 @@ class SnappingManager {
                     
                     if let newBoxRect = getBoxRect(hotSpot: snapArea, currentWindow: currentWindow) {
                         if box == nil {
-                            box = generateBoxWindow()
+                            box = FootprintWindow()
                         }
                         box?.setFrame(newBoxRect, display: true)
                         box?.makeKeyAndOrderFront(nil)
@@ -162,51 +182,18 @@ class SnappingManager {
         }
     }
     
-    // Make the box semi-opaque with a border and rounded corners
-    private func generateBoxWindow() -> NSWindow {
-        
-        let initialRect = NSRect(x: 0, y: 0, width: 0, height: 0)
-        let box = NSWindow(contentRect: initialRect, styleMask: .titled, backing: .buffered, defer: false)
-
-        box.title = "Rectangle"
-        box.backgroundColor = .clear
-        box.isOpaque = false
-        box.level = .modalPanel
-        box.hasShadow = false
-        box.isReleasedWhenClosed = false
-  
-        box.styleMask.insert(.fullSizeContentView)
-        box.titleVisibility = .hidden
-        box.titlebarAppearsTransparent = true
-        box.collectionBehavior.insert(.transient)
-        box.standardWindowButton(.closeButton)?.isHidden = true
-        box.standardWindowButton(.miniaturizeButton)?.isHidden = true
-        box.standardWindowButton(.zoomButton)?.isHidden = true
-        box.standardWindowButton(.toolbarButton)?.isHidden = true
-        
-        let boxView = NSBox()
-        boxView.boxType = .custom
-        boxView.borderColor = .lightGray
-        boxView.borderType = .lineBorder
-        boxView.borderWidth = 0.5
-        boxView.cornerRadius = 5
-        boxView.wantsLayer = true
-        boxView.layer?.backgroundColor = NSColor.black.withAlphaComponent(0.3).cgColor
-        
-        box.contentView = boxView
-        
-        return box
-    }
-    
     func getBoxRect(hotSpot: SnapArea, currentWindow: Window) -> CGRect? {
-        if let calculation = windowCalculationFactory.calculation(for: hotSpot.action) {
+        if let calculation = WindowCalculationFactory.calculationsByAction[hotSpot.action] {
             
-            let rectResult = calculation.calculateRect(currentWindow, lastAction: nil, visibleFrameOfScreen: hotSpot.screen.visibleFrame, action: hotSpot.action)
+            let rectCalcParams = RectCalculationParameters(window: currentWindow, visibleFrameOfScreen: hotSpot.screen.adjustedVisibleFrame, action: hotSpot.action, lastAction: nil)
+            let rectResult = calculation.calculateRect(rectCalcParams)
             
-            if gapSize > 0, hotSpot.action.gapsApplicable {
+            let gapsApplicable = hotSpot.action.gapsApplicable
+            
+            if Defaults.gapSize.value > 0, gapsApplicable != .none {
                 let gapSharedEdges = rectResult.subAction?.gapSharedEdge ?? hotSpot.action.gapSharedEdge
 
-                return GapCalculation.applyGaps(rectResult.rect, sharedEdges: gapSharedEdges, gapSize: gapSize)
+                return GapCalculation.applyGaps(rectResult.rect, dimension: gapsApplicable, sharedEdges: gapSharedEdges, gapSize: Defaults.gapSize.value)
             }
             
             return rectResult.rect

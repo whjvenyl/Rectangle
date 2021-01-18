@@ -4,7 +4,7 @@
 
 Rectangle is a window management app based on Spectacle, written in Swift.
 
-![image](https://user-images.githubusercontent.com/13651296/71896594-7cdb9280-3154-11ea-83a7-70b71c6df9d4.png)
+![image](https://user-images.githubusercontent.com/13651296/101402672-57ab5300-38d4-11eb-9e8c-6a3147d26711.png)
 
 ## System Requirements
 Rectangle supports macOS v10.11+. If you're willing to test on earlier versions of macOS, this can be updated.
@@ -15,7 +15,7 @@ You can download the latest dmg from https://rectangleapp.com or the [Releases p
 Or install with brew cask:
 
 ```bash
-brew cask install rectangle
+brew install --cask rectangle
 ```
 ## How to use it
 The keyboard shortcuts are self explanatory, but the snap areas can use some explanation if you've never used them on Windows or other window management apps.
@@ -69,6 +69,18 @@ defaults write com.knollsoft.Rectangle subsequentExecutionMode -int 2
 2: disabled
 3: cycle displays for left/right actions, halves to thirds for the rest (old Rectangle behavior)
 
+### Resize on Directional Move (will be released in v0.41)
+By default, the commands to move to certain edges will not resize the window.
+If `resizeOnDirectionalMove` is enabled, the _halves to thirds_ mode is instead used.
+This means that when moving to the left/right, the width will be changed, and when moving to the top/bottom, the height will be changed.
+This size will cycle between 1/2 -> 2/3 -> 1/3 of the screen’s width/height.
+
+Note that if subsequent execution mode is set to cycle displays when this is enabled, Move Left and Move Right will always resize to 1/2, and pressing it again will move to the next display.
+
+```bash
+defaults write com.knollsoft.Rectangle resizeOnDirectionalMove -bool true
+```
+
 ### Almost Maximize
 By default, "Almost Maximize" will resize the window to 90% of the screen (width & height).
 
@@ -79,10 +91,24 @@ defaults write com.knollsoft.Rectangle almostMaximizeHeight -float <VALUE_BETWEE
 ```bash
 defaults write com.knollsoft.Rectangle almostMaximizeWidth -float <VALUE_BETWEEN_0_&_1>
 ```
-### Adding Gaps Between Windows
+### Modify the "footprint" displayed for drag to snap area
+
+Adjust the alpha (transparency). Default is 0.3.
 
 ```bash
-defaults write com.knollsoft.Rectangle gapSize -float <NUM_PIXELS>
+defaults write com.knollsoft.Rectangle footprintAlpha -float <VALUE_BETWEEN_0_&_1>
+```
+
+Change the border width. Default is 2 (used to be 1).
+
+```bash
+defaults write com.knollsoft.Rectangle footprintBorderWidth -float <NUM_PIXELS>
+```
+
+Disable the fade.
+
+```bash
+defaults write com.knollsoft.Rectangle footprintFade -int 2
 ```
 ### Move Up/Down/Left/Right: Don't center on edge
 
@@ -136,6 +162,17 @@ defaults write com.knollsoft.Rectangle snapEdgeMarginLeft -int 10
 defaults write com.knollsoft.Rectangle snapEdgeMarginRight -int 10
 ```
 
+### Setting gaps at the screen edges
+
+You can specify gaps at the edges of your screen that will be left uncovered by window resizing operations. This is useful if, for example, you use a dock replacement that should not have windows overlapping it.
+
+```bash
+defaults write com.knollsoft.Rectangle screenEdgeGapTop -int 10
+defaults write com.knollsoft.Rectangle screenEdgeGapBottom -int 10
+defaults write com.knollsoft.Rectangle screenEdgeGapLeft -int 10
+defaults write com.knollsoft.Rectangle screenEdgeGapRight -int 10
+```
+
 ### Ignore specific drag to snap areas
 
 Each drag to snap area on the edge of a screen can be ignored with a single Terminal command, but it's a bit field setting so you'll have to determine the bit field for which ones you want to disable.
@@ -172,25 +209,6 @@ defaults write com.knollsoft.Rectangle ignoredSnapAreas -int 3840
 
 Apple never released a public API for Spaces, so any direct interaction with Spaces uses private APIs that are actually a bit shaky. Using the private API adds enough complexity to the app to where I feel it's better off without it. If Apple decides to release a public API for it, I'll add it in.
 
-### Window moving/resizing appears animated/smooth instead of quick, and windows don't end up where you expect
-
-This is a macOS bug. Here's some things that trigger it:
-
-* Using the on-screen keyboard
-* Unnecessary accessibility privileges for certain apps, like Alfred. Remove accessibility privileges from apps that don't need them.
-* Running certain apps, like Dragon and Punto Switcher (a Russian app).
-* Certain external monitors trigger this behavior.
-
-You can try enabling "Reduce motion" in the "Display" section of the "Accessibility" System Preferences. This doesn't appear to work with the on-screen keyboard, but might work for other triggers of the issue. Note that this setting will replace the Spaces/Mission Control/Exposé animations with fades.
-
-As a last resort, you can use this workaround release of Rectangle: [v0.25.1](https://github.com/rxhanson/Rectangle/releases/tag/v0.25.1), but it's just a better experience to avoid the items that trigger it and use the latest version of Rectangle. The ideal scenario is that Apple gets around to fixing it. This scenario will only happen if _a lot_ of people file the issue.
-
-If you are a developer, file an issue here:
-https://feedbackassistant.apple.com/
-
-If you are not a developer, use:
-https://www.apple.com/feedback/macos.html
-
 ### Window resizing is off slightly for iTerm2
 
 By default iTerm2 will only resize in increments of character widths. There might be a setting inside iTerm2 to disable this, but you can change it with the following command.
@@ -218,13 +236,14 @@ If windows aren't resizing or moving as you expect, here's some initial steps to
 ## Preferences Storage
 The configuration for Rectangle is stored using NSUserDefaults, meaning it is stored in the following location:
 `~/Library/Preferences/com.knollsoft.Rectangle.plist`
+Note that shortcuts in v0.41+ are stored in a different format and will not load in prior versions.
 
 That file can be backed up or transferred to other machines.
 
 ---
 
 ## Contributing
-Logic from Rectangle is used in the [Multitouch](https://multitouch.app) app. The [Hookshot](https://hookshot.app) app is entirely built on top of Rectangle. If you contribute significant code or localizations that get merged into Rectangle, you get free licenses of Multitouch and Hookshot. Contributors to Sparkle, MASShortcut, or Spectacle can also receive free Multitouch or Hookshot licenses (just send me a direct message on [Gitter](https://gitter.im)). 
+Logic from Rectangle is used in the [Multitouch](https://multitouch.app) app. The [Hookshot](https://hookshot.app) app is entirely built on top of Rectangle. If you contribute significant code or localizations that get merged into Rectangle, you get a free license of Multitouch or Hookshot. Contributors to Sparkle, MASShortcut, or Spectacle can also receive free Multitouch or Hookshot licenses (just send me a direct message on [Gitter](https://gitter.im)). 
 
 ### Localization
 Initial localizations were done using [DeepL](https://www.deepl.com/translator) and Google Translate, but many of them have been updated by contributors. Translations that weren't done by humans can definitely be improved. If you would like to contribute to localization, all of the translations are held in the Main.strings per language. If you would like to add a localization but one doesn't currently exist and you don't know how to create one, create an issue and a translation file can be initialized.
@@ -237,8 +256,3 @@ Rectangle uses [CocoaPods](https://cocoapods.org/) to install Sparkle and MASSho
 1. Make sure CocoaPods is installed and up to date on your machine (`sudo gem install cocoapods`).
 1. Execute `pod install` the root directory of the project. 
 1. Open the generated xcworkspace file (`open Rectangle.xcworkspace`).
-
-#### Signing
-- When running in Xcode (debug), Rectangle is signed to run locally with no developer ID configured.
-- You can run the app out of the box this way, but you might have to authorize the app in System Prefs every time you run it. 
-- If you don't want to authorize in System Prefs every time you run it and you have a developer ID set up, you'll want to use that to sign it and additionally add the Hardened Runtime capability to the Rectangle and RectangleLauncher targets. 

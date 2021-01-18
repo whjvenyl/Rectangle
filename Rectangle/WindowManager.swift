@@ -13,12 +13,9 @@ class WindowManager {
     private let screenDetection = ScreenDetection()
     private let standardWindowMoverChain: [WindowMover]
     private let fixedSizeWindowMoverChain: [WindowMover]
-    private let windowCalculationFactory: WindowCalculationFactory
     private let windowHistory: WindowHistory
-    private let gapSize = Defaults.gapSize.value
     
-    init(windowCalculationFactory: WindowCalculationFactory, windowHistory: WindowHistory) {
-        self.windowCalculationFactory = windowCalculationFactory
+    init(windowHistory: WindowHistory) {
         self.windowHistory = windowHistory
         standardWindowMoverChain = [
             StandardWindowMover(),
@@ -31,9 +28,26 @@ class WindowManager {
         ]
     }
     
+    private func recordAction(previous lastRectangleAction: RectangleAction?, windowId: Int, resultingRect: CGRect, action: WindowAction, subAction: SubWindowAction?) {
+        let newCount: Int
+        if lastRectangleAction?.action == action,
+           let currentCount = lastRectangleAction?.count {
+            newCount = currentCount + 1
+        } else {
+            newCount = 1
+        }
+        
+        windowHistory.lastRectangleActions[windowId] = RectangleAction(
+            action: action,
+            subAction: subAction,
+            rect: resultingRect,
+            count: newCount
+        )
+    }
+    
     func execute(_ parameters: ExecutionParameters) {
-        guard let frontmostWindowElement = AccessibilityElement.frontmostWindow(),
-            let windowId = frontmostWindowElement.getIdentifier()
+        guard let frontmostWindowElement = parameters.windowElement ?? AccessibilityElement.frontmostWindow(),
+              let windowId = parameters.windowId ?? frontmostWindowElement.getIdentifier()
         else {
             NSSound.beep()
             return
@@ -82,32 +96,38 @@ class WindowManager {
             Logger.log("Window is not snappable or usable screen is not valid")
             return
         }
-
+        
         let currentNormalizedRect = AccessibilityElement.normalizeCoordinatesOf(currentWindowRect, frameOfScreen: usableScreens.frameOfCurrentScreen)
         let currentWindow = Window(id: windowId, rect: currentNormalizedRect)
         
-        let windowCalculation = windowCalculationFactory.calculation(for: action)
+        let windowCalculation = WindowCalculationFactory.calculationsByAction[action]
         
-        guard var calcResult = windowCalculation?.calculate(currentWindow, lastAction: lastRectangleAction, usableScreens: usableScreens, action: action) else {
+        let calculationParams = WindowCalculationParameters(window: currentWindow, usableScreens: usableScreens, action: action, lastAction: lastRectangleAction)
+        guard var calcResult = windowCalculation?.calculate(calculationParams) else {
             NSSound.beep()
             Logger.log("Nil calculation result")
             return
         }
         
-        if gapSize > 0, calcResult.resultingAction.gapsApplicable {
+        let gapsApplicable = calcResult.resultingAction.gapsApplicable
+        
+        if Defaults.gapSize.value > 0, gapsApplicable != .none {
             let gapSharedEdges = calcResult.resultingSubAction?.gapSharedEdge ?? calcResult.resultingAction.gapSharedEdge
             
-            calcResult.rect = GapCalculation.applyGaps(calcResult.rect, sharedEdges: gapSharedEdges, gapSize: gapSize)
+            calcResult.rect = GapCalculation.applyGaps(calcResult.rect, dimension: gapsApplicable, sharedEdges: gapSharedEdges, gapSize: Defaults.gapSize.value)
         }
 
         if currentNormalizedRect.equalTo(calcResult.rect) {
             Logger.log("Current frame is equal to new frame")
+            
+            recordAction(previous: lastRectangleAction, windowId: windowId, resultingRect: currentWindowRect, action: calcResult.resultingAction, subAction: calcResult.resultingSubAction)
+            
             return
         }
         
         let newRect = AccessibilityElement.normalizeCoordinatesOf(calcResult.rect, frameOfScreen: usableScreens.frameOfCurrentScreen)
 
-        let visibleFrameOfDestinationScreen = NSRectToCGRect(calcResult.screen.visibleFrame)
+        let visibleFrameOfDestinationScreen = calcResult.screen.adjustedVisibleFrame
 
         let useFixedSizeMover = !frontmostWindowElement.isResizable() && action.resizes
         let windowMoverChain = useFixedSizeMover
@@ -117,22 +137,14 @@ class WindowManager {
         for windowMover in windowMoverChain {
             windowMover.moveWindowRect(newRect, frameOfScreen: usableScreens.frameOfCurrentScreen, visibleFrameOfScreen: visibleFrameOfDestinationScreen, frontmostWindowElement: frontmostWindowElement, action: action)
         }
+        
+        if usableScreens.currentScreen != calcResult.screen {
+            frontmostWindowElement.bringToFront(force: true)
+        }
 
         let resultingRect = frontmostWindowElement.rectOfElement()
         
-        var newCount = 1
-        if lastRectangleAction?.action == calcResult.resultingAction,
-            let currentCount = lastRectangleAction?.count {
-            newCount = currentCount + 1
-            newCount %= 3
-        }
-        
-        windowHistory.lastRectangleActions[windowId] = RectangleAction(
-            action: calcResult.resultingAction,
-            subAction: calcResult.resultingSubAction,
-            rect: resultingRect,
-            count: newCount
-        )
+        recordAction(previous: lastRectangleAction, windowId: windowId, resultingRect: resultingRect, action: calcResult.resultingAction, subAction: calcResult.resultingSubAction)
         
         if Logger.logging {
             var srcDestScreens: String = ""
@@ -160,10 +172,14 @@ struct ExecutionParameters {
     let action: WindowAction
     let updateRestoreRect: Bool
     let screen: NSScreen?
-    
-    init(_ action: WindowAction, updateRestoreRect: Bool = true, screen: NSScreen? = nil) {
+    let windowElement: AccessibilityElement?
+    let windowId: Int?
+
+    init(_ action: WindowAction, updateRestoreRect: Bool = true, screen: NSScreen? = nil, windowElement: AccessibilityElement? = nil, windowId: Int? = nil) {
         self.action = action
         self.updateRestoreRect = updateRestoreRect
         self.screen = screen
+        self.windowElement = windowElement
+        self.windowId = windowId
     }
 }

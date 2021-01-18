@@ -8,41 +8,26 @@
 
 import Foundation
 
-class LowerRightCalculation: WindowCalculation, RepeatedExecutionsCalculation {
+class LowerRightCalculation: WindowCalculation, RepeatedExecutionsInThirdsCalculation {
 
-    override func calculateRect(_ window: Window, lastAction: RectangleAction?, visibleFrameOfScreen: CGRect, action: WindowAction) -> RectResult {
+    override func calculateRect(_ params: RectCalculationParameters) -> RectResult {
 
-        if lastAction == nil || !Defaults.subsequentExecutionMode.resizes {
-            return calculateFirstRect(window, lastAction: lastAction, visibleFrameOfScreen: visibleFrameOfScreen, action: action)
+        if params.lastAction == nil || !Defaults.subsequentExecutionMode.resizes {
+            return calculateFirstRect(params)
         }
         
-        return calculateRepeatedRect(window, lastAction: lastAction, visibleFrameOfScreen: visibleFrameOfScreen, action: action)
+        return calculateRepeatedRect(params)
     }
     
-    func calculateFirstRect(_ window: Window, lastAction: RectangleAction?, visibleFrameOfScreen: CGRect, action: WindowAction) -> RectResult {
+    func calculateFractionalRect(_ params: RectCalculationParameters, fraction: Float) -> RectResult {
+        let visibleFrameOfScreen = params.visibleFrameOfScreen
+
+        var rect = visibleFrameOfScreen
         
-        var oneQuarterRect = visibleFrameOfScreen
-        oneQuarterRect.size.width = floor(visibleFrameOfScreen.width / 2.0)
-        oneQuarterRect.size.height = floor(visibleFrameOfScreen.height / 2.0)
-        oneQuarterRect.origin.x += oneQuarterRect.width
-        return RectResult(oneQuarterRect)
-    }
-    
-    func calculateSecondRect(_ window: Window, lastAction: RectangleAction?, visibleFrameOfScreen: CGRect, action: WindowAction) -> RectResult {
+        rect.size.width = floor(visibleFrameOfScreen.width * CGFloat(fraction))
+        rect.origin.x = visibleFrameOfScreen.maxX - rect.width
+        rect.size.height = floor(visibleFrameOfScreen.height / 2.0)
         
-        var twoThirdsRect = visibleFrameOfScreen
-        twoThirdsRect.size.width = floor(visibleFrameOfScreen.width * 2 / 3.0)
-        twoThirdsRect.origin.x = visibleFrameOfScreen.minX + visibleFrameOfScreen.width - twoThirdsRect.width
-        twoThirdsRect.size.height = floor(visibleFrameOfScreen.height / 2.0)
-        return RectResult(twoThirdsRect)
-    }
-    
-    func calculateThirdRect(_ window: Window, lastAction: RectangleAction?, visibleFrameOfScreen: CGRect, action: WindowAction) -> RectResult {
-        
-        var oneThirdRect = visibleFrameOfScreen
-        oneThirdRect.size.width = floor(visibleFrameOfScreen.width / 3.0)
-        oneThirdRect.origin.x = visibleFrameOfScreen.minX + visibleFrameOfScreen.width - oneThirdRect.width
-        oneThirdRect.size.height = floor(visibleFrameOfScreen.height / 2.0)
-        return RectResult(oneThirdRect)
+        return RectResult(rect)
     }
 }

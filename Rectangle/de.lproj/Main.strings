@@ -270,7 +270,7 @@
 "STb-JK-oB1.title" = "Rectangle-Einstellungen";
 
 /* Class = "NSButtonCell"; title = "Cycle across displays on repeated left or right commands"; ObjectID = "SXx-HZ-GkB"; */
-"SXx-HZ-GkB.title" = "Monitorwechsel bei wiederholten links/rechts-Befehlen";
+"SXx-HZ-GkB.title" = "Monitorwechsel bei wiederholten Links/Rechts-Befehlen";
 
 /* Class = "NSMenu"; title = "Window"; ObjectID = "Td7-aD-5lo"; */
 "Td7-aD-5lo.title" = "Fenster";
@@ -441,7 +441,7 @@
 "lgE-cR-cQ5.title" = "Gehen Sie zu Systemeinstellungen → Sicherheit → Datenschutz → Bedienungshilfen";
 
 /* Class = "NSTextFieldCell"; title = "When the menu bar icon is hidden, relaunch Rectangle from Finder to open the menu."; ObjectID = "ltc-mf-BHr"; */
-"ltc-mf-BHr.title" = "Um das Menü zu öffnen, wenn das Symbol in der Menüleiste ausgeblendet ist, starten Sie Rectangle im Finder neu.";
+"ltc-mf-BHr.title" = "Starte Rectangle erneut vom Finder aus, wenn das Menüleistensymbol ausgeblendet ist.";
 
 /* Class = "NSMenuItem"; title = "Check Grammar With Spelling"; ObjectID = "mK6-2p-4JG"; */
 "mK6-2p-4JG.title" = "Grammatik mit Rechtschreibung prüfen";
@@ -549,20 +549,78 @@
 "z6F-FW-3nz.title" = "Ersetzungen einblenden";
 
 /* Class = "NSTextFieldCell"; title = "Welcome to Rectangle!"; ObjectID = "kYm-Ye-gOR"; */
-"kYm-Ye-gOR.title" = "Welcome to Rectangle!";
+"kYm-Ye-gOR.title" = "Willkommen bei Rectangle!";
 
 /* Class = "NSTextFieldCell"; title = "Please select your default shortcuts and behavior"; ObjectID = "gEd-S9-Cfp"; */
-"gEd-S9-Cfp.title" = "Please select your default shortcuts and behavior";
+"gEd-S9-Cfp.title" = "Bitte wählen Sie ihre Standardeinstellungen für Kurzbefehle und Verhalten aus";
 
 /* Class = "NSButtonCell"; title = "Recommended"; ObjectID = "HOp-Kd-vhY"; */
-"HOp-Kd-vhY.title" = "Recommended";
+"HOp-Kd-vhY.title" = "Empfohlen";
 
 /* Class = "NSTextFieldCell"; title = "Spectacle shortcuts are more likely to conflict with other shortcuts"; ObjectID = "kXi-dT-zSF"; */
-"kXi-dT-zSF.title" = "Spectacle shortcuts are more likely to conflict with other shortcuts";
+"kXi-dT-zSF.title" = "Spectacle-Kurzbefehle stehen eher mit anderen Kurzbefehlen in Konflikt";
 
 /* Class = "NSTextFieldCell"; title = "Choosing Spectacle will also cycle 1/2, 2/3, and 1/3 window widths on repeated shortcuts"; ObjectID = "xcE-uL-2J0"; */
-"xcE-uL-2J0.title" = "Choosing Spectacle will also cycle 1/2, 2/3, and 1/3 window widths on repeated shortcuts";
+"xcE-uL-2J0.title" = "Wenn Spectacle ausgewählt wird, werden bei wiederholten Kurzbefehlen 1/2-, 2/3- und 1/3-Fensterbreiten durchgewechselt";
 
 /* Class = "NSWindow"; title = "Welcome!"; ObjectID = "HtH-yF-lBR"; */
-"HtH-yF-lBR.title" = "Welcome!";
+"HtH-yF-lBR.title" = "Willkommen!";
 
+/* Class = "NSTextFieldCell"; title = "Center Half"; ObjectID = "bRX-dV-iAR"; */
+"bRX-dV-iAR.title" = "Mittlere Hälfte";
+
+/* Class = "NSTextFieldCell"; title = "First Fourth"; ObjectID = "Q6Q-6J-okH"; */
+"Q6Q-6J-okH.title" = "Erstes Viertel";
+
+/* Class = "NSTextFieldCell"; title = "Second Fourth"; ObjectID = "Fko-xs-gN5"; */
+"Fko-xs-gN5.title" = "Zweites Viertel";
+
+/* Class = "NSTextFieldCell"; title = "Third Fourth"; ObjectID = "ZTK-rS-b17"; */
+"ZTK-rS-b17.title" = "Drittes Viertel";
+
+/* Class = "NSTextFieldCell"; title = "Last Fourth"; ObjectID = "6HX-rn-VIp"; */
+"6HX-rn-VIp.title" = "Viertes Viertel";
+
+/* Class = "NSTextFieldCell"; title = "Top Left Sixth"; ObjectID = "mFt-Kg-UYG"; */
+"mFt-Kg-UYG.title" = "Oberes linkes Sechstel";
+
+/* Class = "NSTextFieldCell"; title = "Top Center Sixth"; ObjectID = "TTx-7X-Wie"; */
+"TTx-7X-Wie.title" = "Oberes mittleres Sechstel";
+
+/* Class = "NSTextFieldCell"; title = "Top Right Sixth"; ObjectID = "f3Q-q7-Pcy"; */
+"f3Q-q7-Pcy.title" = "Oberes rechtes Sechstel";
+
+/* Class = "NSTextFieldCell"; title = "Bottom Left Sixth"; ObjectID = "LqQ-pM-jRN"; */
+"LqQ-pM-jRN.title" = "Unteres linkes Sechstel";
+
+/* Class = "NSTextFieldCell"; title = "Bottom Center Sixth"; ObjectID = "iOQ-1e-esP"; */
+"iOQ-1e-esP.title" = "Unteres mittleres Sechstel";
+
+/* Class = "NSTextFieldCell"; title = "Bottom Right Sixth"; ObjectID = "m2F-eA-g7w"; */
+"m2F-eA-g7w.title" = "Unteres rechtes Sechstel";
+
+/* Class = "NSMenuItem"; title = "View Logging…"; ObjectID = "O8K-y6-bva"; */
+"O8K-y6-bva.title" = "Protokolle anzeigen…";
+
+/* Class = "NSTabViewItem"; label = "Settings"; ObjectID = "gtf-PD-IHm"; */
+"gtf-PD-IHm.label" = "Einstellungen";
+
+/* Class = "NSTabViewItem"; label = "Keyboard Shortcuts"; ObjectID = "uw2-9W-2jq"; */
+"uw2-9W-2jq.label" = "Tastaturkurzbefehle";
+
+/* Class = "NSButtonCell"; title = "Restore window size when unsnapped"; ObjectID = "UZP-5q-D5Y"; */
+"UZP-5q-D5Y.title" = "Fenstergröße beim Entrasten zurücksetzen";
+
+/* Class = "NSTextFieldCell"; title = "Gaps between windows"; ObjectID = "bg9-nw-YvU"; */
+"bg9-nw-YvU.title" = "Lücken zwischen Fenstern";
+
+"Halves" = "Hälften";
+"Corners" = "Ecken";
+"Thirds" = "Drittel";
+"Maximize" = "Maximieren";
+"Size" = "Größe";
+"Display" = "Bildschirm";
+"Other" = "Mehr";
+"Move to Edge" = "An den Rand bewegen";
+"Fourths" = "Viertel";
+"Sixths" = "Sechstel";
